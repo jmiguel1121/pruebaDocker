@@ -1,0 +1,57 @@
+version: '3.7'
+
+# Define services
+services:
+  # App java
+  app-prueba:
+    # Configuration for building the docker image for the backend service
+    build:
+      context: ./ # Use an image built from the specified dockerfile in the `polling-app-server` directory.
+      dockerfile: Dockerfile
+    ports:
+      - "7005:8080" # Forward the exposed port 8080 on the container to port 8080 on the host machine
+    restart: always
+    depends_on: 
+      - db # This service depends on mysql. Start that first.
+    environment: # Pass environment variables to the service
+      IP_DB: docker_db_1
+      PORT_DB: 3306
+      DATABASE_DB: db_prueba
+      DATASOURCE_USERNAME: root
+      DATASOURCE_PASSWORD: qwertyuiop    
+    networks: # Networks to join (Services on the same network can communicate with each other using their name)
+      - backend
+
+  # Database Service (Mysql)
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 9080:8080
+      
+  db:
+    image: mysql:8.0.24
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'db_prueba'
+      MYSQL_USER: 'miguel1121'
+      MYSQL_PASSWORD: '123456789'
+      MYSQL_ROOT_PASSWORD: 'qwertyuiop'
+    ports:
+      - '3307:3306'
+    volumes:
+      - ./db_prueba:/var/lib/mysql
+      - ./db-scripts/:/docker-entrypoint-initdb.d/
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - backend  
+  
+# Volumes
+volumes:
+  db_prueba:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  backend:
+
+
